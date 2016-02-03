@@ -8,6 +8,10 @@ output: pdf_document
 Thursday February 4th, 2016
 --------------------
 
+# Annoucements
+
+Reorganization of project repositories on GitHub.
+
 #1. Validate set-up (about 20 minutes)
 
 - Open RStudio
