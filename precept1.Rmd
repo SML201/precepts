@@ -74,7 +74,7 @@ Reorganization of project repositories on GitHub.
 
 log(2)
 
-log(10, 2)
+log(10, base=2)
 
 x <- 2
 
