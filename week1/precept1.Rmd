@@ -1,0 +1,114 @@
+---
+title: "Precept 1"
+author: "Emily Nelson"
+date: "February 1, 2016"
+output: pdf_document
+---
+
+Thursday February 4th, 2016
+--------------------
+
+# Annoucements
+
+Reorganization of project repositories on GitHub.
+
+#1. Validate set-up (about 20 minutes)
+
+- Open RStudio
+
+- Open an R script
+
+- Talk about 4 panes -- console, files/plots, environment, open file
+    * `hist(rnorm(100, 5, 1))` -- show a plot
+    * `Control` - `Enter` -- run commands from script window
+    * Versus running commands from console
+    * Show how variables appear in environment pane
+
+- Install and load libraries -- `load(reshape2)`, display code for `melt`
+
+- **Interlude**: Circulate and answer questions
+
+#2. Basic R Practice (about 30 minutes)
+
+- Type some commands
+    * Force interaction here -- start with one person and go around the room
+        * Ask general questions like "what is a function?" and specific ones like "what happens if I do this?"
+
+    * Simple math: `4+4`
+   
+    * Functions: `log(2)`
+        * What is a function?
+        * Arguments: `log(10, 2)`
+        * What does this do differently? What should I add to the above statement to keep up good programming practice?
+   
+    * Variables: `x <- 2`, `log(x)`
+        * `class()` / types of variables
+        * We can pass variables to functions: `x <- 2`, `log(x)`
+        * what types of variables are in R? (5)
+    
+    * Vectors and vector-wise functions -- `x <- 1:10`, `log(x)`, `sum(x)` -- see the difference?
+        * Creating a vector -- `c()`, `vector()`
+        * Subsetting a vector
+        
+    * Matrices
+        * Create a matrix -- `matrix()`
+        * What happens when we use functions on matrices?
+        
+    * Factors
+        * Why / when would we want to use factors?
+    
+    * Lists
+        * What is the difference between vectors and lists?
+        * `[]` versus `[[]]`
+    
+    * Make a `data.frame` -- or maybe just load `mtcars` and look at it
+        * Extract a column -- `mtcars$mpg` -- What is this?
+        * We can use functions on this too
+    
+- **Interlude**: Circulate and answer questions
+
+#3. Corresponding R Code
+
+```{r code}
+4 + 4
+
+log(2)
+
+log(10, base=2)
+
+x <- 2
+
+log(x)
+
+class(x)
+
+y <- 1:10
+
+log(y)
+
+sum(y)
+
+m <- matrix(1:6, nrow=2)
+
+sum(m)
+
+log(m)
+
+colSums(m)
+
+rowSums(m)
+
+data(mtcars)
+
+head(mtcars)
+
+class(mtcars)
+
+mtcars$mpg
+
+class(mtcars$mpg)
+
+mean(mtcars$mpg)
+```
+
+
