@@ -1,0 +1,40 @@
+---
+title: "Precept 2"
+author: "Wei"
+date: "February 11, 2016"
+output: pdf_document
+---
+
+# Precept plan
+
+0. Introduce precept plan.
+1. Making RMarkdown files (10 minutes).
+2. Control structures and vectorization (20 minutes).
+3. FizzBuzz (15 minutes).
+
+## Making RMarkdown files
+
+1. Discuss basics of YAML header (title, author, date, output)
+2. Discuss code chunks:
+    a. How to delimit chunks.
+    b. Telling `knitr` to execute a chunk.
+    c. Naming chunks.
+    d. Logical options: `echo`, `results`, `include`, `eval`, and `cache`.
+
+## Control structures
+1. Loops: 
+    a. `for` and `while`.
+    b. `break` and `next`.
+2. Vectorization and matrix operations.
+3. Manually doing vectorization with loops.
+
+## FizzBuzz: 
+
+1. Conditional structure: `if`, `else if`, and `else`.
+2. Write a program that prints the numbers from 1 to 100. But for multiples of three print "Fizz" instead of the number and for the multiples of five print "Buzz". For numbers which are multiples of both three and five print "FizzBuzz". 
+3. FizzBuzz is a classic programming interview question used to screen out candidates. It's slightly tricky when it comes to how you use conditionals!
+
+## Cleaning up
+
+Students email `.Rmd` file and `.pdf` file (or `.html` if PDF build fails...but make sure you have Emily or me look at the PDF build failing so we can give troubleshooting advice) to me (whao@princeton.edu) for attendence credit **WITH "SML201" IN THE SUBJECT LINE**.
+
