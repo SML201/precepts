@@ -2,7 +2,7 @@
 title: "Precept 3"
 author: "Emily Nelson"
 date: "February 16, 2016"
-output: pdf_document
+output: html_document
 ---
 
 #Topics
