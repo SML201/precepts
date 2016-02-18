@@ -1,0 +1,158 @@
+---
+title: "Precept 3"
+author: "Emily Nelson"
+date: "February 16, 2016"
+output: html_document
+---
+
+```{r setup}
+set.seed(1990)
+```
+
+#Topics
+
+- Functions
+- Packages
+- Subsetting
+- Tidy Data
+- `reshape2` -- `dcast` and `melt`
+- `dplyr`
+
+#Functions
+
+How do I define a function? What is an argument?
+
+Write a function that takes two numbers, squares them, and returns the square root of their sum.
+```{r functions}
+z = 1
+
+pythagoras <- function(x, y) {
+  z = sqrt(x*x + y*y)
+  z
+}
+
+z = pythagoras(2, 3)
+```
+
+What happens if we give the function a character? A boolean?
+
+What happens to variables declared inside the function? Can we access them outside? What if we declare a variable inside that has the same name as one outside? (What do we call this?) Can we access a variable from inside the function that was declared outside?
+
+#Packages
+
+What is a package? Why are they useful? How do I install a package? Update them?
+
+How do I see what packages I have loaded?
+
+What happens if I type `melt` into the console before and after I execute the following code?
+
+```{r load_packages, message=FALSE}
+library(reshape2)
+library(dplyr)
+```
+
+#Subsetting
+
+1. Get the 4th row of `d`. Then get the 2nd value in this row.
+2. Get the 3rd column of `d`.
+3. Get the column of `d` called `b`.
+4. Get whatever is stored in the 5th row of `d` in the 2nd column.
+5. Get the indices of any row of `d` that has a TRUE in the column named `c`.
+6. Get the indices of any row of `d` that has the letters `m`, `q`, or `w`.
+
+
+```{r subsetting}
+d <- data.frame(a = letters[2:23], b = rbinom(22, 5, 0.1), c = as.logical(rbinom(22, 1, 0.5)))
+
+d[4,][2]
+
+d[,3]
+
+d[,"b"]
+d$b
+d[["b"]]
+
+d[5,2]
+
+which(d[,"c"])
+
+which(d$a %in% c("m", "q", "w"))
+```
+
+
+#Tidy Data
+
+Why is tidy data useful? What are the drawbacks?
+
+Here is some gene expression data:
+
+```{r tidy_example}
+#don't worry too much about how I made this
+gene_expression <- data.frame(expand.grid(1:100, c("A", "B"), c(1, 2)))
+gene_expression = gene_expression %>%
+  rename(gene = Var1, condition = Var2, replicate = Var3)
+
+gene_expression <- gene_expression %>%
+  mutate(hour_1 = rnorm(400, 10, 1)) %>%
+  mutate(hour_2 = rnorm(400, hour_1, 1)) %>%
+  mutate(hour_3 = rnorm(400, hour_2, 1)) %>%
+  tbl_df()
+
+print(gene_expression)
+
+ge_tidy <- melt(gene_expression, id.vars = c("gene", "condition", "replicate")) %>%
+  tbl_df() %>%
+  rename(hour = variable, expression = value)
+
+```
+
+Is this tidy data? Why or why not?
+
+How can we make it tidy?
+
+#reshape2
+
+`melt` makes data tidy, `dcast` makes it "un"-tidy. Why might we want to use `dcast`? (ie, in what situation is "un"-tidy data useful?)
+
+Turn `gene_expression` back into untidy data with `dcast`.
+
+```{r untidy}
+ge_dcast <- dcast(data = ge_tidy, formula = gene + condition + replicate ~ hour, value.var = "expression") %>%
+  tbl_df()
+
+plot(ge_dcast$hour_1, ge_dcast$hour_2)
+```
+
+#dplyr
+
+1. `filter` -- extract just condition "A"
+2. `arrange` -- sort by expression level at hour 3
+3. `mutate` -- rename the conditions to glucose and ethanol (glucose=A) -- introduce that awesome thing called `ifelse`
+4. `mutate` round 2 -- add a column called `sample` that has the condition and replicate information concatenated -- introduce `paste`
+5. `group_by` and `summarize` -- find the mean expression level in each condition at each hour
+6. `select` -- delete the replicate column -- 2 ways to do it
+
+```{r dplyr_example}
+ge_tidy %>%
+  filter(condition=="A")
+
+ge_tidy %>%
+  arrange(-expression) %>%
+  filter(hour == "hour_3")
+
+ge_tidy %>%
+  mutate(condition = ifelse(condition=="A", 
+                            "glucose", "ethanol"))
+
+ge_tidy %>%
+  mutate(sample = paste0(condition, replicate))
+
+ge_tidy %>%
+  select(-replicate)
+
+ge_tidy %>%
+  group_by(hour, condition) %>%
+  summarize(mean = mean(expression)) %>%
+  ungroup() %>%
+  arrange(mean)
+```
