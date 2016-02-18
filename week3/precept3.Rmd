@@ -5,6 +5,10 @@ date: "February 16, 2016"
 output: html_document
 ---
 
+```{r setup}
+set.seed(1990)
+```
+
 #Topics
 
 - Functions
