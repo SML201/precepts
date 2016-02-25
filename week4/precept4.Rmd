@@ -1,0 +1,80 @@
+---
+title: "Precept 4"
+author: "Wei"
+date: "February 25, 2016"
+output: html_document
+---
+
+# Precept plan
+
+0. Install `ggplot2` using the command `install.packages("ggplot2")`.
+1. Finish base plotting lecture (and also mention `lines`)
+3. Some general plotting options: colors, shapes, linetypes
+2. Demonstrate plotting on the `diamonds` data set from `ggplot2`.
+
+
+```{r data}
+library(ggplot2)
+data(diamonds)
+head(diamonds)
+```
+
+
+
+### Barplots
+
+Barplots take tables, or matrices of tables. In other words, they're useful for plotting categorical variables.
+
+```{r barplots, fig.width=6, fig.height=4.5}
+barplot(table(diamonds$color))
+barplot(table(diamonds$color), space=0)
+barplot(table(diamonds$color), names.arg=c("random", "labels", "for", "diamond", "color", "factor", "uhhh"))
+barplot(table(diamonds$color), horiz=TRUE)
+barplot(table(diamonds$color), col="firebrick")
+barplot(table(diamonds$color), plot=FALSE)
+```
+
+### Histograms
+
+Histograms are used to plot distributions.
+
+
+```{r hist}
+hist(diamonds$price)
+hist(diamonds$price, breaks=250) #suggestion only
+hist(diamonds$price, breaks=4)
+hist(diamonds$price, main="Diamond prices", xlab="Price ($)", ylab="Count")
+hist(diamonds$price, main="Diamond prices", xlab="Price ($)", ylab="Count", xlim=c(0,20000))
+hist(diamonds$price, main="Diamond prices", xlab="Price ($)", ylab="Count", xlim=c(0,20000), col="rosybrown")
+
+```
+
+### Scatter plots
+
+Scatter plots display two variables. A convention is to say that you are plotting thing-on-the-y-axis versus thing-on-the-x-axis.
+
+```{r scatter plots}
+plot(x=diamonds$carat, y=diamonds$price) #what do we see?
+plot(x=diamonds$carat, y=diamonds$price, cex=3)
+plot(x=diamonds$carat, y=diamonds$price, cex=0.2)
+plot(x=diamonds$carat, y=diamonds$price, pch=5)
+plot(x=diamonds$carat, y=diamonds$price, pch=5, cex=5)
+plot(x=diamonds$carat, y=diamonds$price, type="l")
+plot(x=seq(0, 10, length.out=500), y=seq(0, 10, length.out=500)^2, type="l")
+
+plot(x=diamonds$carat, y=diamonds$price)
+lines(seq(0,5,length.out=100), seq(0, 15000, length.out=100))
+
+plot(x=diamonds$carat, y=diamonds$price)
+abline(v=1, lty=3, col="hotpink", lwd=2)
+abline(v=1.5, lty=3, col="hotpink")
+abline(v=2, lty=3, col="hotpink")
+abline(v=3, lty=3, col="hotpink")
+
+class(diamonds$cut)
+plot(x=diamonds$carat, y=diamonds$price, col=diamonds$color)
+colors <- c("red", "darkorange", "lightgoldenrod", "seagreen", "cornflowerblue", "darkslateblue", "darkorchid")
+plot(x=diamonds$carat, y=diamonds$price, col=colors[diamonds$color], pch=16, cex=0.25, xlab="Carat", ylab="Price ($)")
+legend(x="bottomright", legend=levels(diamonds$color), col=colors, pch=16, title="Color")
+
+```
