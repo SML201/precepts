@@ -1,0 +1,147 @@
+---
+title: "Precept 5"
+author: "Emily Nelson"
+date: "March 2, 2016"
+output: html_document
+---
+
+#Fun With `ggplot2` and Alcohol
+
+```{r setup, message=FALSE}
+library(dplyr)
+library(ggplot2)
+
+load("wine.RData")
+
+wine <- wine %>%
+  tbl_df()
+```
+
+#Boxplots / Violin Plots
+
+What does a boxplot / violin plot show us?
+
+1. Show a boxplot of the pH for each quality score. (Why do we have to cast?)
+
+2. Add a `color` layer for wine type. What happens? What if you use `fill` instead?
+
+3. Change the colors manually. (What if you wanted to change the `fill` colors manually?)
+
+4. Spruce up the axis labels and title.
+
+5. Change the `theme`.
+
+6. Change it to a violin plot. What is the difference?
+
+```{r boxplots}
+ggplot(data=wine, mapping=aes(x=as.factor(quality), y=pH, fill=type)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("red", "yellow")) +
+  labs(title="Boxplot Example", x="Quality") +
+  theme_minimal()
+```
+
+#Histograms
+
+What does a histogram show us?
+
+1. Make a histogram of the alcohol content of the wines with appropirate axis labels. (What happens if I give `geom_histogram` both an `x` and a `y` value?)
+
+2. Add a `fill` layer based on type with manual color selection. What happens?
+
+3. Add a vertical line showing the mean of the data. (How would you add a horizontal line?)
+
+
+```{r histograms}
+ggplot(data=wine, mapping=aes(x=alcohol, fill=type)) +
+  geom_histogram(bins=30) +
+  scale_fill_manual(values = c("red", "yellow")) +
+  theme_bw() +
+  geom_vline(xintercept=mean(wine$alcohol), linetype="dashed") +
+  xlab("Alcohol (%)") +
+  ggtitle("Histogram of Alcohol Content")
+```
+
+#Barplots
+
+What does a barplot show us?
+
+1. Make a barplot showing the mean quality scores for high and low alcohol content wines. Use appropriate themes, labels, etc.
+
+2. Add a color layer. What happens? Is this a good way to visualize the information?
+
+3. Make it better.
+
+```{r barplots}
+wine %>%
+  mutate(alcohol.amt = ifelse(alcohol > mean(wine$alcohol), "high", "low")) %>%
+  group_by(type, alcohol.amt) %>%
+  summarize(mean.quality = mean(quality)) %>%
+  ggplot(mapping=aes(x=type, y=mean.quality, fill=alcohol.amt)) +
+  geom_bar(stat="identity", position="dodge") +
+  scale_fill_manual(values = c("darkviolet", "chartreuse3")) +
+  theme_bw()
+```
+
+
+#Scatter Plots
+
+What does a scatter plot show us?
+
+1. Make a scatter plot showing the relationship between the pH and the fixed acidity, using an appropriate theme and labels.
+
+2. Add a trend line using `stat_smooth`. Try both `loess` and `lm` types. How are they different?
+
+3. Add a color layer for the type of wine. What does this do? What happened to the trend line?
+
+4. Make the points transparent since there is a lot of overlap.
+
+
+```{r scatterplots}
+ggplot(data = wine, mapping = aes(x=fixed.acidity, y=pH, color=type)) +
+  geom_point(alpha=0.4) +
+  theme_bw() +
+  ggtitle("Relationship Between Fixed Acidity and pH") +
+  stat_smooth(se=FALSE, method="lm") +
+  scale_color_manual(values = c("red", "yellow"))
+```
+
+#Facets
+
+The above plot still doesn't look great. There is too much overlap. We can fix this with facets!
+
+1. Add a facet layer. What should it be?
+
+2. Change the color of the trend line.
+
+3. Free the x and y scales. What happens?
+
+```{r facets}
+ggplot(data = wine, mapping = aes(x=fixed.acidity, y=pH, color=type)) +
+  geom_point(alpha=0.4) +
+  theme_bw() +
+  ggtitle("Relationship Between Fixed Acidity and pH") +
+  stat_smooth(se=FALSE, method="lm", color="black", linetype="dashed", size=2) +
+  scale_color_manual(values = c("red", "yellow")) +
+  facet_wrap(~type)
+```
+
+
+#Hexbin
+
+Change the above plot to a `hexbin` plot.
+
+Note: may need to install the `hexbin` package.
+
+```{r hexbin}
+library(hexbin)
+
+ggplot(data = wine, mapping = aes(x=fixed.acidity, y=pH)) +
+  geom_hex() +
+  theme_bw() +
+  ggtitle("Relationship Between Fixed Acidity and pH") +
+  stat_smooth(se=FALSE, method="lm", color="black", linetype="dashed", size=2) +
+  facet_wrap(~type) +
+  scale_fill_gradientn(colors = c("red", "yellow", "green", "blue"), values = c(0, 0.1, 0.5, 1)) +
+  xlab("Fixed Acidity")
+```
