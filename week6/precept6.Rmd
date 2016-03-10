@@ -1,0 +1,247 @@
+---
+title: "Precept 6"
+author: "Wei"
+date: "March 9, 2016"
+output: html_document
+---
+
+# Precept plan
+
+0. Touch briefly on `movie_data` from Project 1.
+1. Distributions in R.
+2. Using simulation to solve probability problems.
+
+
+
+## `movie_data` from Project 1.
+
+```{r proj1_wrapup, message=FALSE}
+#knitr::opts_chunk$set(fig.show="hide", results="hide")
+
+library(dplyr)
+# I learned this load() trick from a student on Project 1
+load(url("https://github.com/SML201/project1/raw/master/project_1_movie_data.RData"))
+movie_data %>% select(-genre) %>%
+  distinct() %>%
+  select(title) %>%
+  table %>%
+  { which(.>1) } %>%
+  names %>% tail
+```
+
+
+## Distributions in R
+
+Functions:
+* d is density
+* p is distribution
+* q is quantile
+* r is random generator
+
+### Discrete examples
+
+1. Fair coin flips.
+    a. What distribution?
+    b. What happens when you try to compute the density or distribution of an invalid value?
+    c. Plots.
+    d. Compute probability for events.
+
+2. How many people cross that skybridge near neuroscience in an hour if the average number of people to cross is 25?
+    a. What distribution?
+    b. Plots.
+    d. Compute probability for events and tail probability.
+    
+### Continuous examples
+
+1. Standard normal/Gaussian intervals.
+    a. Compute probability for intervals.
+    b. Plots.
+
+## Simulations to compute probabilities in R.
+
+General strategy:
+
+0. `sample()`, `replicate()`, and vectorization can help with generating data.
+1. Figure out how to simulate the sample space. *This is very important, because this is the key to successfully computing tricky conditional probabilities.*
+2. Figure out how to check if something happens.
+3. Count up the number of successes and the number of trials.
+
+### Some relationships between distributions
+
+1. Low occurence binomials leads to Poisson
+```{r low_occurence_binomials}
+set.seed(1234)
+
+library(ggplot2)
+
+p <- 0.0004
+n <- 10000
+B <- 100000 #trials
+
+draws <- rbinom(n=B, size=n, prob=p)
+
+data.frame(draws=draws) %>% 
+  ggplot(aes(x=draws, y=..count..)) +
+  geom_histogram()
+
+data.frame(draws=draws) %>% 
+  ggplot(aes(x=draws, y=..count..)) +
+  geom_bar()
+
+poisson_pdf <- data.frame(x=0:15, y=B*dpois(0:15, lambda=n*p))
+
+data.frame(draws=draws) %>% 
+  ggplot(aes(x=draws, y=..count..)) +
+  geom_bar() + 
+  geom_point(aes(x=x, y=y), data=poisson_pdf, color="firebrick", size=5)
+```
+
+2. Central Limit Theorem with binomials
+
+```{r waiting_times}
+p <- 0.33333
+n <- 600
+B <- 100000
+
+draws <- rbinom(n=B, size=n, prob=p)
+data.frame(draws=draws) %>% ggplot(aes(x=draws, y=..count..)) +
+  geom_histogram(binwidth=4) #tune binwidth
+
+x <- seq(150, 250, length.out=1000)
+norm_density <- data.frame(x=x, y=4*B*dnorm(x, mean=200, sd=sqrt(n*p*(1-p))))
+data.frame(draws=draws) %>% ggplot(aes(x=draws, y=..count..)) +
+  geom_histogram(binwidth=4) +
+  geom_line(aes(x=x, y=y), data=norm_density, color="firebrick")
+```
+
+### Neighbor's kids
+
+Some new neighbors moved in next to you. You know they have two young kids. This morning you spoke to one of them who was a girl. What's the probability the other kid is also a girl?
+
+```{r neighborskids}
+sample_space <- matrix(
+  c(0, 0,
+    0, 1,
+    1, 0,
+    1, 1
+  ), byrow=TRUE, ncol=2
+)
+
+B <- 1e7
+draws <- sample(1:4, size=B, replace=TRUE)
+simData <- sample_space[draws,]
+processed <- rowSums(simData)
+sum(processed==2) / sum(processed>0)
+```
+
+### Texas Hold'em
+
+What's the probability you deal yourself pocket aces? In other words, what is the probability the top two cards are both aces?
+
+```{r poker}
+deck <- rep(1:13, 4)
+B <- 1e6
+
+draws <- replicate(B, sample(deck))
+
+dim(draws)
+
+first_card <- draws[1,] == 1
+second_card <- draws[2,] == 1
+
+pocket_aces <- first_card & second_card
+
+sum(pocket_aces) / B
+```
+
+Does this probability change if you're playing at an 8-person table and you're being dealt first?
+
+```{r poker2}
+first_card <- draws[1,] == 1
+second_card <- draws[9,] == 1
+
+pocket_aces <- first_card & second_card
+
+sum(pocket_aces) / B
+```
+
+
+### Coin flips
+
+Let's suppose we flip a fair coin twice. What's the probability of heads then tails (HT)? What's the probability of HH?
+
+```{r coinflip1}
+p <- 0.5
+n <- 1
+B <- 1e6
+
+first_flip <- rbinom(n=B, size=n, prob=p)
+second_flip <- rbinom(n=B, size=n, prob=p)
+
+sum( (first_flip==1) & (second_flip==0) ) / B
+sum( (first_flip==1) & (second_flip==1) ) / B
+```
+
+Suppose we play a game where we flip a fair coin until we see the pattern HT (in which case I win) or the pattern HH (in which case you win). Who is more likely to win this game?
+
+```{r coinflip2}
+p <- 0.5
+n <- 1
+B <- 1e6
+
+ME <- 0
+YOU <- 0
+
+for(i in 1:B){
+  flip <- rbinom(n=1, size=n, prob=p)
+  prev_flip <- rbinom(n=1, size=n, prob=p)
+  while(1){
+    if(flip==1 && prev_flip==1){
+      YOU <- YOU+1
+      break
+    }
+    if(flip==0 && prev_flip==1){
+      ME <- ME+1
+      break
+    }
+    prev_flip <- flip
+    flip <- rbinom(n=1, size=n, prob=p)
+  }
+}
+
+ME/B
+YOU/B
+```
+
+Now let's change it so that we flip until we see HTT (I win) or HHT (You win). We just added a tail to the end of the patterns. Who is more likely to win?
+
+```{r coinflip3}
+p <- 0.5
+n <- 1
+B <- 1e6
+
+ME <- 0
+YOU <- 0
+
+for(i in 1:B){
+  flip <- rbinom(n=1, size=n, prob=p)
+  prev_flip <- rbinom(n=1, size=n, prob=p)
+  prev_flip2 <- rbinom(n=1, size=n, prob=p)
+  while(1){
+    if(flip==0 && prev_flip==1 && prev_flip2==1){
+      YOU <- YOU+1
+      break
+    }
+    if(flip==0 && prev_flip==0 && prev_flip2==1){
+      ME <- ME+1
+      break
+    }
+    prev_flip <- flip
+    prev_flip2 <- prev_flip
+    flip <- rbinom(n=1, size=n, prob=p)
+  }
+}
+
+ME/B
+YOU/B
+```
