@@ -1,0 +1,188 @@
+---
+title: "Precept 7"
+author: "Wei"
+date: "March 24, 2016"
+output: html_document
+---
+
+# Statistics 101
+
+```{r libraries}
+library(ggplot2)
+```
+
+## Plan
+- Central Limit Theorem 
+- Confidence Intervals
+- p-values and Hypothesis Testing
+
+
+## Central Limit Theorem
+
+Let's consider the uniform distribution. Poisson was demonstrated in class and binomial was demonstrated in last precept. The statement of the CLT in the lectures is:
+
+$$\sqrt{n}(\bar{X} -\mu) \rightarrow \operatorname{Normal}(0, \sigma^2)$$
+
+
+where $\operatorname{E}[X_i] = \mu$, $\operatorname{Var}(X_i)=\sigma^2$, and $\bar{X}$ is the sample mean.
+
+Suppose we have 50 observations from Uniform(0, 1). Obviously, the mean of $X_i$ is 0.5. Wikipedia tells us the variance is $\frac{1}{12}(b-a)^2=\frac{1}{12}(1-0)^2=\frac{1}{12}$.
+
+```{r clt_uniform}
+set.seed(1234)
+
+num_reps <- 1e5
+results <- rep(0, num_reps)
+
+for(i in 1:num_reps){
+  X <- runif(50, min=0, max=1)
+  X_bar <- mean(X)
+  results[i] <- sqrt(50)*(X_bar-0.5)
+}
+
+dat <- data.frame(samples=results, x=seq(-2, 2, length.out=1e5), y=dnorm(seq(-2, 2, length.out=1e5), mean=0, sd=sqrt(1/12)))
+ggplot(dat, aes(x=samples, y=..density..)) + geom_histogram(binwidth=0.1) + geom_line(aes(x=x, y=y), color="tomato", size=1, linetype=3) + theme_bw()
+```
+
+## Confidence Intervals
+
+Consider the following experiment, where we have 25 samples from a Normal distribution with $\mu=1$ and $\sigma^2=2$. As an experimenter, let's pretend we know the variance but have to estimate the mean. Compute a 95% confidence interval.
+
+```{r}
+mu <- 1
+sigma <- sqrt(2)
+n <- 25
+
+X <- rnorm(25, mean=mu, sd=sigma)
+
+sample_mu <- mean(X)
+
+sample_mu - (1.96*sigma/sqrt(n))
+sample_mu + (1.96*sigma/sqrt(n))
+
+sample_mu+qnorm(0.025, mean=0, sd=sigma/sqrt(n))
+sample_mu+qnorm(0.975, mean=0, sd=sigma/sqrt(n))
+```
+
+What's the probability we'll get the true mu in the range of this interval over repeated trials?
+
+
+```{r}
+mu <- 1
+sigma <- sqrt(2)
+n <- 25
+
+B <- 1e6
+success <- 0
+for(i in 1:B){
+  X <- rnorm(25, mean=mu, sd=sigma)
+  
+  sample_mu <- mean(X)
+  lower <- sample_mu+qnorm(0.025, mean=0, sd=sigma/sqrt(n))
+  upper <- sample_mu+qnorm(0.975, mean=0, sd=sigma/sqrt(n))
+  if(lower<mu && upper>mu){
+    success <- success+1
+  }
+}
+success/B
+
+```
+
+So we're pretty close to 95%. We can visualize in a different way:
+
+```{r}
+B <- 200
+upper <- rep(0, 50)
+lower <- rep(0, 50)
+
+for(i in 1:B){
+  X <- rnorm(25, mean=mu, sd=sigma)
+  
+  sample_mu <- mean(X)
+  lower[i] <- sample_mu+qnorm(0.025, mean=0, sd=sigma/sqrt(n))
+  upper[i] <- sample_mu+qnorm(0.975, mean=0, sd=sigma/sqrt(n))
+}
+
+dat <- data.frame(upper=upper, lower=lower, id=1:B, outside=lower>mu | upper<mu)
+ggplot(dat, aes(x=id, xend=id, y=lower, yend=upper, color=outside)) + geom_segment() + geom_hline(yintercept=1, color="blue") + scale_color_manual(values=c("black", "hotpink"))
+```
+
+This plots 200 realizations of a 95% confidence interval. If we are choosing any realization of the confidence interval, then there is a 95% chance the interval contains the true $\mu$, because we can compute a lot of realizations and see what proportion of intervals contain the true $\mu$. But when looking at only a specific interval, the ability to compute this probability by looking at repeated experiments is gone, and all we can do is observe the (deterministic) result of whether or not the interval contains the true value.
+
+Why does our 95% confidence interval not imply that there is a 95% chance of including the true $\mu$? The simplest explanation in my opinion is that this question is irrelevant to the discussion of confidence intervals. All the math we have surrounding confidence intervals is to answer a different question: how do we construct an interval that includes the true $\mu$ in 95% of repeated experiments? To answer the question of the probability of an interval including the true $\mu$, one needs to construct probability differently such that you can compute a probability based off only the single experiment you observed. This requires some (Prof. Storey would say subjective) presupposition of what the experiment looks like (this is called the prior in Bayesian statistics). The ability to compute the probability of the interval containing the true $\mu$ is part of the intuitive appeal of Bayesian statistics.
+
+
+## p-values and Hypothesis Testing
+
+First, recall that we know the large sample distribution of the sample mean from the CLT:
+
+$$\sqrt{n}(\bar{X} -\mu) \rightarrow \operatorname{Normal}(0, \sigma^2)$$
+
+or,
+
+$$\frac{\bar{X} -\mu}{\sigma/\sqrt{n}} \rightarrow \operatorname{Normal}(0, 1)$$
+
+We'll stay with the normal random variables situation. We can use the knowledge of this distribution to compute the p-value of the simple test: $H_0: \mu=1$ versus $H_1: \mu \neq 1$. This is a two-sided test.
+
+First, let's suppose that the null hypothesis holds, i.e. the true underlying $\mu=1$. 
+
+```{r}
+mu <- 1
+sigma <- sqrt(2)
+n <- 25
+
+X <- rnorm(25, mean=mu, sd=sigma)
+
+stat <- (mean(X)-mu)/(sigma/sqrt(n))
+stat
+pval <- 2*(1-pnorm(abs(stat)))
+
+dat <- data.frame(x=seq(-3, 3, length.out=1e5), y=dnorm(seq(-3, 3, length.out=1e5)))
+ggplot(dat, aes(x=x, y=y)) + theme_bw() + geom_polygon(fill="steelblue") + geom_vline(xintercept=stat, color="red") + geom_vline(xintercept=-stat, color="red")
+
+```
+
+Let's check that the statistic is actually distributed as a standard normal.
+
+```{r}
+mu <- 1
+sigma <- sqrt(2)
+n <- 25
+B <- 1e5
+
+stats <- rep(0, B)
+
+for(i in 1:B){
+  X <- rnorm(25, mean=mu, sd=sigma)
+  stats[i] <- (mean(X)-mu)/(sigma/sqrt(n))
+}
+
+samples <- data.frame(stats=stats)
+normal <- data.frame(x=seq(-3, 3, length.out=1e5), y=dnorm(seq(-3, 3, length.out=1e5)))
+ggplot(samples, aes(x=stats, y=..density..)) + geom_histogram(binwidth=0.2) + geom_line(data=normal, aes(x=x, y=y), color="firebrick")
+```
+
+Not bad. Note that this when the null is true.
+
+Now let's suppose the null is false and $\mu=2$. We can look at the distribution of the statistic:
+
+```{r}
+mu <- 1
+actual_mu <- 2
+sigma <- sqrt(2)
+n <- 25
+B <- 1e5
+
+stats <- rep(0, B)
+
+for(i in 1:B){
+  X <- rnorm(25, mean=actual_mu, sd=sigma)
+  stats[i] <- (mean(X)-mu)/(sigma/sqrt(n))
+}
+
+samples <- data.frame(stats=stats)
+normal <- data.frame(x=seq(-3, 3, length.out=1e5), y=dnorm(seq(-3, 3, length.out=1e5)))
+ggplot(samples, aes(x=stats, y=..density..)) + geom_histogram(binwidth=0.2) + geom_line(data=normal, aes(x=x, y=y), color="firebrick")
+```
+
+So, the distribution of the statistic is way larger than what we'd expect under the null. This will correspond to smaller p-values in general. 
