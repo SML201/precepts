@@ -1,0 +1,114 @@
+---
+title: "Precept 8"
+author: "Emily Nelson"
+date: "March 30, 2016"
+output: html_document
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(message=FALSE, cache=TRUE, warning=FALSE)
+```
+
+
+```{r setup}
+library(dplyr)
+library(ggplot2)
+library(knitr)
+
+set.seed(2016)
+load("precept8.save")
+```
+
+Agenda: Practice selecting and using statistical tests in R.
+
+#Two Samples
+
+##Basics
+
+```{r two_samples, dependson="setup"}
+x <- rnorm(10000, 5, 1)
+y <- rnorm(10000, -1, 2)
+
+df <- rbind(data.frame(obs = x, label="x"),
+           data.frame(obs=y, label="y"))
+
+df %>%
+  ggplot(aes(x=obs,fill=label)) + 
+  geom_density() +
+  theme_bw() +
+  scale_fill_manual(values = c("chartreuse3", "darkviolet"))
+
+z = x - y
+
+#expected value
+mean(x) - mean(y)
+mean(z)
+5 - (-1)
+
+#variance
+var(x) + var(y)
+var(z)
+1^2 + 2^2
+
+```
+
+
+#Pick the test!
+
+##Casino Example
+
+I work security for a casino. I'm suspicious of a certain felow who has been playing roulette all day and winning quite a bit and I want to find out if he is winning at a rate higher than expected. If it's statistically significant then I can kick him out of the casino.
+
+
+If he is only betting evens, then he should have a 46.37% chance of winning. Below is what I actually observe:
+
+```{r casino}
+casino
+
+```
+
+What is my hypothesis? How do I perform this test in R?
+
+Can I kick him out? What if I watch him for a while more and get more data?
+
+```{r casino2}
+casino2
+```
+
+Can I kick him out now?
+
+##Trial Example
+
+I invented a vaccination for the common cold. I am testing it on some unwitting subjects because being a mad scientist is much more fun than being an ethical one.
+
+I gave one group my vaccine, and the other group some sugar pills, and then counted how many people got a cold over a month-long period.
+
+How can I test to see if the proportions of people who got a cold is equal for the treated and placebo groups?
+
+```{r trial}
+head(trial)
+```
+
+##Publishing Example
+
+I'm an amazing Nobel prize winning scientist, but my up-start graduate student says that I'm not publishing papers as fast anymore as I used to. I want to prove her wrong, so I looked up the number of papers I published a month for three years randomly sampled from earlier in my career, and then compared that to the number of papers I published a month for three random years later in my career.
+
+How can I show whether or not my publishing rate is the same?
+
+```{r publishing}
+head(publishing)
+
+```
+
+##Finals Week
+
+My buddy and I are having a competition to see who can score higher on our finals this year. We're also taking ten classes because we are really smart and we need a sample size that isn't miniscule.
+
+How can we decide if one of us did better (in a statistically significant manner)?
+
+```{r}
+my_scores
+his_scores
+
+```
+
