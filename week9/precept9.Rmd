@@ -1,0 +1,89 @@
+---
+title: "Precept 9"
+author: "Emily Nelson"
+date: "April 6, 2016"
+output: html_document
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(message=FALSE, cache=TRUE, warning=FALSE)
+```
+
+```{r setup}
+set.seed(1990)
+
+library(dplyr)
+library(ggplot2)
+```
+
+Agenda:
+
+1. Clarification on longitude for project 3
+2. Practice with more statistical tests
+
+#Longitude Clarification
+
+Longitude has been transformed in the data that comes with the project. I did this so that plotting would be very simple -- I didn't want people worrying about map projections and such. If you **want** to worry about that stuff, here is the link to NOAA's site where you can get the untransformed data: ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt. Otherwise, just plot longitude by latitude and don't worry too much about it.
+
+#Categorical Data
+
+Are left-handed people more likely to develop schizophrenia? Research says yes: at a rate five times greater than the right-handed population.
+
+Let's try detecting this effect.
+
+```{r categorical}
+n = 100
+
+df = data.frame(person = 1:n, hand = rbinom(n, 1, 0.11))
+
+df = df %>% 
+  group_by(person) %>%
+  mutate(diagnosis = ifelse(hand==0, rbinom(1, 1, 0.007),
+                            rbinom(1, 1, 0.036))) %>%
+  tbl_df()
+```
+
+How do we compute the expected values?
+
+What percent of the entire population is diagnosed with schizophrenia? Is left-handed?
+
+What test do we use?
+
+Why is degrees of freedom 1?
+
+#Correlation
+
+##Example 1
+
+Guess the Pearson correlation coefficient (what about Spearman?):
+
+```{r correlation}
+x = runif(1000, -3, 3)
+y = sin(x) + rnorm(1000, 0, 0.2)
+
+sin = data.frame(x=x, y=y)
+sin %>%
+  ggplot(aes(x=x, y=y)) +
+  geom_point() +
+  theme_bw()
+```
+
+Why?
+
+##Example 2
+
+Which will be higher for this dataset, Pearson or Spearman?
+
+```{r versus}
+x = runif(1000, 1, 5)
+y = x^6 + rnorm(1000, 0, 25)
+
+exp = data.frame(x=x, y=y)
+exp %>%
+  ggplot(aes(x=x, y=y)) +
+  geom_point() +
+  theme_bw()
+```
+
+What is the advantage of using one of these over the other?
+
