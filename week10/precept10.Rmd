@@ -1,0 +1,145 @@
+---
+title: "Precept 10"
+author: "Emily Nelson"
+date: "April 13, 2016"
+output: html_document
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(message=FALSE, cache=TRUE, warning=FALSE)
+```
+
+
+Agenda:
+
+- Davis data -- 2 sample t-test and least squares regression example from class
+- Linear Regression -- Intuitive Approach
+- ANOVA and interpretation
+
+
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(reshape2)
+
+#install.packages("car")
+library("car")
+data("Davis", package="car")
+
+Davis = Davis %>%
+  filter(height > 100)
+
+```
+
+
+#Two Sample T-Test and Least Squares Regression
+
+A least squares regression using a factor variable is equivalent to performing a two-sample t-test.
+
+```{r}
+ggplot(data = Davis, aes(x=height, y=weight, color = sex)) +
+  geom_point() +
+  theme_bw() +
+  scale_color_manual(values = c("red", "blue"))
+
+davis_model <- lm(weight ~ sex, data=Davis)
+summary(davis_model)
+
+t.test(Davis[Davis$sex=="F",]$weight, Davis[Davis$sex=="M",]$weight,
+       var.equal=TRUE)
+```
+
+Explain these values in **words**.
+
+#Intuitive Interpretation of Multiple Least Squares
+
+```{r}
+model1 <- lm(height ~ weight, data=Davis)
+summary(model1)
+
+davis_fitted = Davis
+davis_fitted$fitted = model1$fitted.values
+  
+ggplot(data = Davis, aes(x=weight, y=height, color=sex)) +
+  geom_point() +
+  geom_line(data = davis_fitted, aes(x=weight, y=fitted),
+            size=2, color="black") +
+  scale_color_manual(values = c("red", "blue")) +
+  theme_bw()
+```
+
+```{r}
+model2 <- lm(height ~ weight + sex, data=Davis)
+summary(model2)
+
+davis_fitted = Davis
+davis_fitted$fitted = model2$fitted.values
+  
+ggplot(data = Davis, aes(x=weight, y=height, color=sex)) +
+  geom_point() +
+  geom_line(data = davis_fitted, aes(x=weight, y=fitted),
+            size=2) +
+  scale_color_manual(values = c("red", "blue")) +
+  theme_bw()
+```
+
+```{r}
+model3 <- lm(height ~ weight + sex + weight*sex, data=Davis)
+summary(model3)
+
+davis_fitted = Davis
+davis_fitted$fitted = model3$fitted.values
+  
+ggplot(data = Davis, aes(x=weight, y=height, color=sex)) +
+  geom_point() +
+  geom_line(data = davis_fitted, aes(x=weight, y=fitted),
+            size=2) +
+  scale_color_manual(values = c("red", "blue")) +
+  theme_bw()
+```
+
+```{r}
+Davis_sq = Davis
+Davis_sq$weight2 = Davis_sq$weight * Davis_sq$weight
+
+model4 <- lm(height ~ weight + sex + weight2, data=Davis_sq)
+summary(model4)
+
+davis_fitted = Davis_sq
+davis_fitted$fitted = model4$fitted.values
+  
+ggplot(data = Davis, aes(x=weight, y=height, color=sex)) +
+  geom_point() +
+  geom_line(data = davis_fitted, aes(x=weight, y=fitted),
+            size=2) +
+  scale_color_manual(values = c("red", "blue")) +
+  theme_bw()
+```
+
+```{r}
+model5 <- lm(height ~ weight + sex + weight2 + weight*sex, data=Davis_sq)
+summary(model5)
+
+davis_fitted = Davis_sq
+davis_fitted$fitted = model5$fitted.values
+  
+ggplot(data = Davis, aes(x=weight, y=height, color=sex)) +
+  geom_point() +
+  geom_line(data = davis_fitted, aes(x=weight, y=fitted),
+            size=2) +
+  scale_color_manual(values = c("red", "blue")) +
+  theme_bw()
+```
+
+What is happening as I add more and more terms? Can I just go on adding terms forever?
+
+#ANOVA
+
+```{r}
+anova(model3)
+
+anova(model5)
+```
+
+What does this tell us?
