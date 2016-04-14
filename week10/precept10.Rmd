@@ -15,6 +15,7 @@ Agenda:
 - Davis data -- 2 sample t-test and least squares regression example from class
 - Linear Regression -- Intuitive Approach
 - ANOVA and interpretation
+- Do
 
 
 
@@ -143,3 +144,22 @@ anova(model5)
 ```
 
 What does this tell us?
+
+#Do or Do Not, There Is No Try
+
+How do I efficiently fit multiple models?
+
+```{r}
+library(broom)
+
+fit_model <- function(t) {
+  m = lm(height ~ weight, t)
+  return(tidy(m))
+}
+
+Davis %>%
+  group_by(sex) %>%
+  do(fit_model(.))
+
+```
+
