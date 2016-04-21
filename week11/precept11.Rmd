@@ -1,0 +1,63 @@
+---
+title: "Precept 11"
+author: "Wei"
+date: "April 21, 2016"
+output: html_document
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(message=FALSE, cache=TRUE, warning=FALSE)
+```
+
+
+Agenda:
+
+- Finish discussing `caret`.
+
+
+```{r}
+library(dplyr)
+library(kernlab)
+library(caret)
+
+data(spam)
+
+inTrain <- createDataPartition(y=spam$type, p=0.6, list=FALSE)
+
+training <-spam[inTrain,]
+testing <- spam[-inTrain,]
+
+suppressWarnings(modelFit_glm <- train(type ~., data=training, method="glm"))
+modelFit_glm
+
+predictions <- predict(modelFit_glm, newdata=testing)
+
+confusionMatrix(predictions, testing$type)
+cM <- confusionMatrix(predictions, testing$type)$table
+```
+
+$$\kappa = \frac{\text{observed acc.} - \text{expected acc.}}{1 - \text{expected acc.}}$$
+
+
+```{r}
+obs_acc <- (cM[1,1] + cM[2,2])/ (sum(cM))
+exp_acc <- ( (cM[1,1] + cM[1,2]) * (cM[1,1] + cM[2,1]) / sum(cM) +
+             (cM[1,2] + cM[2,2]) * (cM[2,1] + cM[2,2]) / sum(cM) ) /
+          sum(cM)
+(obs_acc - exp_acc)/(1 - exp_acc)
+```
+
+
+```{r}
+modelFit_svm <- train(type ~., data=training, method="svmLinear")
+modelFit_svm
+predictions <- predict(modelFit_svm, newdata=testing)
+confusionMatrix(predictions, testing$type)
+```
+
+```{r}
+modelFit_rpart <- train(type ~., data=training, method="rpart")
+modelFit_rpart
+
+```
+
