@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r global_options, include=FALSE}
-knitr::opts_chunk$set(message=FALSE, cache=TRUE, warning=FALSE)
+knitr::opts_chunk$set(message=FALSE, warning=FALSE)
 ```
 
 
@@ -40,7 +40,7 @@ pca <- function(x, space=c("rows", "columns"),
 plot_image <- function(image_vector, label=NULL){
   DF <- data.frame(x=rep(1:28, 28), y=-sort(rep(1:28, 28))+28, val=image_vector)
   p <- ggplot(DF, aes(x=x, y=y, fill=image_vector)) + 
-	 geom_tile(width=1, height=1) +
+	 geom_tile(aes(width=1, height=1)) +
 	 scale_fill_gradient(low="white", high="black") +
 	 coord_fixed(ratio=1) + 
 	 theme_void() +
