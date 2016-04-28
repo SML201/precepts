@@ -14,6 +14,7 @@ knitr::opts_chunk$set(message=FALSE, cache=TRUE, warning=FALSE)
 library(dplyr)
 library(ggplot2)
 library(knitr)
+library(RColorBrewer)
 
 #source("https://github.com/SML201/precepts/blob/master/week12/setup.R")
 
@@ -67,30 +68,136 @@ k-means. Look at cluster assignments. Centers are barely meaningful since we're 
 
 ```{r}
 #about 20 sec
-km <- kmeans(x=data, centers=10, iter.max = 20)
+system.time(km <- kmeans(x=data, centers=10, iter.max = 20))
 names(km)
-km$cluster %>% head
-table(label[which(km$cluster==7)])
+km$cluster %>% head(n=50)
+table(km$cluster)
+table(label[which(km$cluster==7)]) #???
+table(label[which(km$cluster==3)])
 ```
 
 Hierarchical clustering
 
 ```{r}
+#subset data
+sub_data <- data[1:2000,]
+sub_label <- label[1:2000]
+
+system.time(D <- dist(sub_data, method="euclidean"))
+hc <- hclust(D, method="ward.D")
+dhc <- as.dendrogram(hc)
+plot(hc)
+plot(dhc)
 ```
 
-`ggplot2` dendrogram tricks
+`ggdendro` dendrogram tricks. 
+
+https://cran.r-project.org/web/packages/ggdendro/vignettes/ggdendro.html
 
 ```{r}
+library(ggdendro)
+ddata <- dendro_data(dhc, type = "rectangle")
+seg_data <- segment(ddata) %>% tbl_df
+
+ggplot(seg_data) + 
+  geom_segment(aes(x = x, y = y, xend = xend, yend = yend)) + 
+  theme_bw()
+
+leaf_labels <- ddata$labels %>% 
+  select(label) %>%
+  unlist %>% 
+  as.character %>% 
+  as.integer
+
+
+seg_data %>% filter(yend==0)
+
+seg_data <- seg_data %>% mutate(label=ifelse(yend==0, sub_label[leaf_labels[x]], 11)) %>%
+  mutate(label=as.factor(label))
+
+pal <- c(brewer.pal(10, "Paired"), "black")
+
+ggplot(seg_data) + 
+  geom_segment(aes(x = x, y = y, xend = xend, yend = yend, color=label)) + 
+  theme_bw() +
+  scale_y_continuous(trans="sqrt") + #just to mess with scale
+  scale_colour_manual(values=pal, 0:9)
 ```
+
+Let's try a difference distance metric
+```{r}
+system.time(D <- dist(sub_data, method="manhattan"))
+manhattan_hc <- hclust(D, method="ward.D")
+dhc <- as.dendrogram(hc)
+ddata <- dendro_data(dhc, type = "rectangle")
+seg_data <- segment(ddata) %>% tbl_df
+
+leaf_labels <- ddata$labels %>% 
+  select(label) %>%
+  unlist %>% 
+  as.character %>% 
+  as.integer
+
+
+seg_data %>% filter(yend==0)
+
+seg_data <- seg_data %>% mutate(label=ifelse(yend==0, sub_label[leaf_labels[x]], 11)) %>%
+  mutate(label=as.factor(label))
+
+ggplot(seg_data) + 
+  geom_segment(aes(x = x, y = y, xend = xend, yend = yend, color=label)) + 
+  theme_bw() +
+  scale_y_continuous(trans="sqrt") + #just to mess with scale
+  scale_colour_manual(values=pal, breaks=0:9) +
+  guides(colour = guide_legend(override.aes = list(size=3)))
+```
+
+
 
 
 PCA:
 
 1. Scree plot
 2. Examine principal components
+3. Reconstruct low rank images
 
 ```{r}
-pca_out <- pca(data)
+system.time(pca_out <- pca(data))
+
+DF <- data.frame(d=1:length(pca_out$pve), pve=pca_out$pve)
+ggplot(DF, aes(x=d, y=pve)) + geom_point() + theme_bw()
+
+DF <- data.frame(d=1:15, pve=pca_out$pve[1:15])
+ggplot(DF, aes(x=d, y=pve)) + geom_point() + theme_bw()
+
+plot_image(pca_out$pc[1,])
+plot_image(pca_out$pc[2,])
+plot_image(pca_out$pc[3,])
+plot_image(pca_out$pc[4,])
+plot_image(pca_out$pc[5,])
+plot_image(pca_out$pc[6,])
+
+
+plot_image(data[1234,], label[1234])
+projection <- as.integer(pca_out$loading[1234,] %*% pca_out$pc + mean(data[1234,]))
+plot_image(projection)
+projection <- as.integer(pca_out$loading[1234,1:3] %*% pca_out$pc[1:3,] + mean(data[1234,]))
+plot_image(projection)
+projection <- as.integer(pca_out$loading[1234,1:6] %*% pca_out$pc[1:6,] + mean(data[1234,]))
+projection[projection<0] <- 0
+plot_image(projection)
+projection <- as.integer(pca_out$loading[1234,1:10] %*% pca_out$pc[1:10,] + mean(data[1234,]))
+projection[projection<0] <- 0
+plot_image(projection)
+projection <- as.integer(pca_out$loading[1234,1:20] %*% pca_out$pc[1:20,] + mean(data[1234,]))
+projection[projection<0] <- 0
+plot_image(projection)
+projection <- as.integer(pca_out$loading[1234,1:30] %*% pca_out$pc[1:30,] + mean(data[1234,]))
+projection[projection<0] <- 0
+plot_image(projection)
+projection <- as.integer(pca_out$loading[1234,1:40] %*% pca_out$pc[1:40,] + mean(data[1234,]))
+projection[projection<0] <- 0
+plot_image(projection)
 ```
 
 
